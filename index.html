@@ -73,7 +73,6 @@
             
             <!-- Upload Section -->
             <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer transition-all duration-200 hover:border-indigo-400 hover:bg-gray-50 mb-6 group">
-                <!-- Added 'multiple' attribute here -->
                 <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 <div class="flex flex-col items-center justify-center gap-3">
                     <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
@@ -115,8 +114,8 @@
                 </div>
 
                 <!-- Extraction Form -->
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-4 flex-1">
-                    <div class="flex items-center justify-between border-b pb-3">
+                <div id="extraction-form" class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-4 flex-1 transition-colors duration-300">
+                    <div class="flex items-center justify-between border-b pb-3 border-gray-200/50">
                         <h3 class="font-semibold text-gray-800" id="form-title">Log Entry Details</h3>
                         <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">AI Extraction</span>
                     </div>
@@ -124,7 +123,7 @@
                     <!-- OCR Scratchpad -->
                     <div class="mb-2">
                         <label class="block text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">AI Response (Debug)</label>
-                        <textarea id="field-ocr-raw" class="w-full h-20 border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-600 bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none resize-none font-mono" readonly placeholder="AI extracted data will appear here..."></textarea>
+                        <textarea id="field-ocr-raw" class="w-full h-20 border border-gray-200 rounded-md px-3 py-2 text-xs text-gray-600 bg-white/50 focus:ring-2 focus:ring-indigo-500 outline-none resize-none font-mono" readonly placeholder="AI extracted data will appear here..."></textarea>
                     </div>
 
                     <!-- Data Fields -->
@@ -133,11 +132,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Date</label>
-                                <input type="date" id="field-date" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <input type="date" id="field-date" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Class</label>
-                                <input type="text" id="field-class" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g. 5A">
+                                <input type="text" id="field-class" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white" placeholder="e.g. 5A">
                             </div>
                         </div>
 
@@ -145,23 +144,23 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Subject</label>
-                                <input type="text" id="field-subject" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g. Math">
+                                <input type="text" id="field-subject" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white" placeholder="e.g. Math">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Teacher-in-charge</label>
-                                <input type="text" id="field-teacher" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Name">
+                                <input type="text" id="field-teacher" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white" placeholder="Name">
                             </div>
                         </div>
 
                         <!-- Row 3: Counts -->
-                        <div class="grid grid-cols-3 gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div class="grid grid-cols-3 gap-3 bg-gray-50/50 p-3 rounded-lg border border-gray-200">
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Originals</label>
-                                <input type="number" id="field-originals" min="1" class="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm" oninput="app.calcTotal()">
+                                <input type="number" id="field-originals" min="1" class="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm bg-white" oninput="app.calcTotal()">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Copies</label>
-                                <input type="number" id="field-copies" min="1" class="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm" oninput="app.calcTotal()">
+                                <input type="number" id="field-copies" min="1" class="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm bg-white" oninput="app.calcTotal()">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 mb-1 uppercase">Total Pages</label>
@@ -173,11 +172,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div class="relative">
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Ricoh (Count)</label>
-                                <input type="number" id="field-ricoh" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="0">
+                                <input type="number" id="field-ricoh" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white" placeholder="0">
                             </div>
                             <div class="relative">
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Toshiba (Count)</label>
-                                <input type="number" id="field-toshiba" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="0">
+                                <input type="number" id="field-toshiba" class="w-full border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white" placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -249,6 +248,7 @@
             processedInBatch: 0,
             
             init() {
+                console.log("App initialized");
                 this.cacheDOM();
                 this.bindEvents();
                 this.dom.fieldDate.valueAsDate = new Date();
@@ -263,6 +263,7 @@
                     progressStatus: document.getElementById('progress-status'),
                     progressPercent: document.getElementById('progress-percent'),
                     reviewSection: document.getElementById('review-section'),
+                    extractionForm: document.getElementById('extraction-form'),
                     previewImage: document.getElementById('preview-image'),
                     queueBadge: document.getElementById('queue-badge'),
                     formTitle: document.getElementById('form-title'),
@@ -304,18 +305,21 @@
             preventDefaults(e) { e.preventDefault(); e.stopPropagation(); },
 
             handleDrop(e) {
+                console.log("File dropped");
                 const dt = e.dataTransfer;
                 const files = dt.files;
                 this.handleFiles(files);
             },
 
             handleFileSelect(e) {
+                console.log("File selected");
                 const files = e.target.files;
                 this.handleFiles(files);
             },
 
             handleFiles(files) {
                 const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+                console.log(`Found ${imageFiles.length} image files`);
                 
                 if (imageFiles.length > 0) {
                     // Add to queue
@@ -364,6 +368,7 @@
             },
 
             previewAndProcess(file) {
+                console.log("Previewing file:", file.name);
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.dom.previewImage.src = e.target.result;
@@ -380,12 +385,15 @@
             },
 
             async processImageWithGemini(base64Data, mimeType) {
-                // Quick check if key is missing for deployment
+                console.log("Starting AI Process...");
+
+                // --- CRITICAL: API KEY CHECK ---
                 if(!this.apiKey) {
                      const userKey = prompt("No API Key found in code. Please enter your Google Gemini API Key:");
-                     if(userKey) this.apiKey = userKey;
-                     else {
-                         alert("API Key required for AI processing.");
+                     if(userKey && userKey.trim() !== "") {
+                         this.apiKey = userKey.trim();
+                     } else {
+                         alert("API Key required for AI processing. Returning to upload.");
                          this.returnToUpload();
                          return;
                      }
@@ -398,13 +406,15 @@
                 // Disable fields while scanning
                 this.toggleFields(true);
 
+                // Updated Prompt for Circled items
                 const promptText = `
                     You are an expert in data extraction from handwritten documents, with a meticulous eye for detail and accuracy. 
                     Your task is to extract specific data points ('Class', 'Subject', 'Teacher-in-charge', 'No. of pages of original copy', 'No. of copies', 'Total No. of printed pages', 'Ricoh', and 'Toshiba') from the provided handwritten image. 
                     
                     1. Carefully examine the Handwritten Image.
                     2. Extract the value for each identified data point.
-                    3. Output the result STRICTLY as a JSON object. Do not include markdown formatting like \`\`\`json.
+                    3. **Special Rule for Printers:** If the word 'Ricoh' or 'Toshiba' is CIRCLED, set its value to 1. If a specific number is written next to them, use that number.
+                    4. Output the result STRICTLY as a JSON object. Do not include markdown formatting like \`\`\`json.
                     
                     The JSON must have these exact keys:
                     {
@@ -445,15 +455,23 @@
                     const extractedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
                     if (extractedText) {
+                        console.log("Extraction success");
                         this.dom.ocrRaw.value = extractedText;
                         const data = JSON.parse(extractedText);
                         this.populateFields(data);
+                        
+                        // Alert User with Yellow Background (Visual Feedback)
+                        if (this.dom.extractionForm) {
+                            this.dom.extractionForm.classList.remove('bg-white');
+                            this.dom.extractionForm.classList.add('bg-yellow-100', 'border-yellow-400');
+                        }
+                        
                     } else {
                         throw new Error("No data extracted");
                     }
 
                 } catch (error) {
-                    console.error(error);
+                    console.error("Extraction Error:", error);
                     this.dom.ocrRaw.value = `Error: ${error.message}. Please verify API key or internet connection.`;
                 } finally {
                     this.dom.progressContainer.classList.add('hidden');
@@ -510,6 +528,12 @@
                 this.dom.fieldTotal.value = '';
                 this.dom.fieldRicoh.value = '';
                 this.dom.fieldToshiba.value = '';
+                
+                // Reset Color (Back to White)
+                if (this.dom.extractionForm) {
+                    this.dom.extractionForm.classList.add('bg-white');
+                    this.dom.extractionForm.classList.remove('bg-yellow-100', 'border-yellow-400');
+                }
             },
 
             skipCurrent() {
