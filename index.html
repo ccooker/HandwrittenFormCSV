@@ -73,13 +73,14 @@
             
             <!-- Upload Section -->
             <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer transition-all duration-200 hover:border-indigo-400 hover:bg-gray-50 mb-6 group">
-                <input type="file" id="file-input" class="hidden" accept="image/*">
+                <!-- Added 'multiple' attribute here -->
+                <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
                 <div class="flex flex-col items-center justify-center gap-3">
                     <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
-                    <h3 class="text-lg font-medium text-gray-900">Upload Log Image</h3>
-                    <p class="text-sm text-gray-500 max-w-xs">Click to browse or drag & drop.</p>
+                    <h3 class="text-lg font-medium text-gray-900">Upload Log Images</h3>
+                    <p class="text-sm text-gray-500 max-w-xs">Drag & drop multiple files here to batch process.</p>
                 </div>
             </div>
 
@@ -100,9 +101,15 @@
                 <!-- Image Preview -->
                 <div class="bg-gray-100 rounded-lg border border-gray-200 p-2 flex items-center justify-center min-h-[150px] max-h-[250px] relative group">
                     <img id="preview-image" src="" alt="Preview" class="h-full object-contain rounded shadow-sm">
+                    
+                    <!-- Queue Count Overlay -->
+                    <div id="queue-badge" class="absolute top-2 left-2 bg-black/75 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm hidden">
+                        Queue: 0
+                    </div>
+
                     <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="app.clearSelection()" class="bg-white text-red-500 p-2 rounded shadow hover:bg-red-50" title="Discard and New Upload">
-                            <i class="fa-solid fa-trash"></i>
+                        <button onclick="app.skipCurrent()" class="bg-white text-red-500 p-2 rounded shadow hover:bg-red-50" title="Skip this image">
+                            <i class="fa-solid fa-forward"></i> Skip
                         </button>
                     </div>
                 </div>
@@ -110,7 +117,7 @@
                 <!-- Extraction Form -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col gap-4 flex-1">
                     <div class="flex items-center justify-between border-b pb-3">
-                        <h3 class="font-semibold text-gray-800">Log Entry Details</h3>
+                        <h3 class="font-semibold text-gray-800" id="form-title">Log Entry Details</h3>
                         <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">AI Extraction</span>
                     </div>
 
@@ -175,9 +182,11 @@
                         </div>
                     </div>
 
-                    <button onclick="app.addToSheet()" class="mt-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Add Entry
-                    </button>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="app.addToSheet()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-check"></i> <span id="btn-add-text">Add Entry</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -231,7 +240,13 @@
     <script>
         const app = {
             data: [],
-            apiKey: "AIzaSyCzDEQxdEJYah9koqm-P7dVagm70aWIJS8", // API Key injected by environment
+            // TODO: PASTE YOUR API KEY HERE FOR DEPLOYMENT (e.g. "AIzaSy...")
+            apiKey: "AIzaSyCzDEQxdEJYah9koqm-P7dVagm70aWIJS8", 
+            
+            // Queue Management
+            queue: [],
+            totalInBatch: 0,
+            processedInBatch: 0,
             
             init() {
                 this.cacheDOM();
@@ -249,6 +264,9 @@
                     progressPercent: document.getElementById('progress-percent'),
                     reviewSection: document.getElementById('review-section'),
                     previewImage: document.getElementById('preview-image'),
+                    queueBadge: document.getElementById('queue-badge'),
+                    formTitle: document.getElementById('form-title'),
+                    btnAddText: document.getElementById('btn-add-text'),
                     
                     // Inputs
                     ocrRaw: document.getElementById('field-ocr-raw'),
@@ -276,7 +294,10 @@
                 ['dragleave', 'drop'].forEach(eventName => this.dom.uploadZone.classList.remove('drag-active'));
 
                 this.dom.uploadZone.addEventListener('drop', this.handleDrop.bind(this), false);
-                this.dom.uploadZone.addEventListener('click', () => this.dom.fileInput.click());
+                this.dom.uploadZone.addEventListener('click', (e) => {
+                    // Prevent triggering click when clicking child elements if needed
+                    this.dom.fileInput.click(); 
+                });
                 this.dom.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
             },
 
@@ -294,14 +315,52 @@
             },
 
             handleFiles(files) {
-                if (files.length > 0) {
-                    const file = files[0];
-                    if (file.type.startsWith('image/')) {
-                        this.previewAndProcess(file);
+                const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+                
+                if (imageFiles.length > 0) {
+                    // Add to queue
+                    this.queue.push(...imageFiles);
+                    
+                    // If we are starting a new batch
+                    if (this.dom.reviewSection.classList.contains('hidden')) {
+                        this.totalInBatch = this.queue.length;
+                        this.processedInBatch = 0;
+                        this.processNextInQueue();
                     } else {
-                        alert("Please upload an image file.");
+                        // If adding to existing batch
+                        this.totalInBatch += imageFiles.length;
+                        this.updateQueueUI();
                     }
+                } else {
+                    alert("Please upload image files.");
                 }
+            },
+
+            processNextInQueue() {
+                if (this.queue.length === 0) {
+                    this.returnToUpload();
+                    return;
+                }
+
+                const file = this.queue.shift();
+                this.processedInBatch++;
+                this.updateQueueUI();
+                this.previewAndProcess(file);
+            },
+
+            updateQueueUI() {
+                const remaining = this.queue.length;
+                
+                if (remaining > 0) {
+                    this.dom.queueBadge.innerText = `Queue: ${remaining}`;
+                    this.dom.queueBadge.classList.remove('hidden');
+                    this.dom.btnAddText.innerText = "Add & Next";
+                } else {
+                    this.dom.queueBadge.classList.add('hidden');
+                    this.dom.btnAddText.innerText = "Add Entry";
+                }
+
+                this.dom.formTitle.innerText = `Log Entry Details (${this.processedInBatch} of ${this.totalInBatch})`;
             },
 
             previewAndProcess(file) {
@@ -321,9 +380,23 @@
             },
 
             async processImageWithGemini(base64Data, mimeType) {
+                // Quick check if key is missing for deployment
+                if(!this.apiKey) {
+                     const userKey = prompt("No API Key found in code. Please enter your Google Gemini API Key:");
+                     if(userKey) this.apiKey = userKey;
+                     else {
+                         alert("API Key required for AI processing.");
+                         this.returnToUpload();
+                         return;
+                     }
+                }
+
                 this.dom.progressContainer.classList.remove('hidden');
-                this.dom.progressStatus.innerText = "Analyzing handwriting with AI...";
+                this.dom.progressStatus.innerText = `Scanning image ${this.processedInBatch} of ${this.totalInBatch}...`;
                 this.dom.ocrRaw.value = "Sending to AI...";
+                
+                // Disable fields while scanning
+                this.toggleFields(true);
 
                 const promptText = `
                     You are an expert in data extraction from handwritten documents, with a meticulous eye for detail and accuracy. 
@@ -384,21 +457,21 @@
                     this.dom.ocrRaw.value = `Error: ${error.message}. Please verify API key or internet connection.`;
                 } finally {
                     this.dom.progressContainer.classList.add('hidden');
+                    this.toggleFields(false);
                 }
             },
 
             populateFields(data) {
                 if (data.date) this.dom.fieldDate.value = data.date;
-                if (data.class) this.dom.fieldClass.value = data.class;
-                if (data.subject) this.dom.fieldSubject.value = data.subject;
-                if (data.teacher) this.dom.fieldTeacher.value = data.teacher;
-                
-                if (data.originals) this.dom.fieldOriginals.value = data.originals;
-                if (data.copies) this.dom.fieldCopies.value = data.copies;
-                if (data.total) this.dom.fieldTotal.value = data.total;
-                
-                if (data.ricoh) this.dom.fieldRicoh.value = data.ricoh;
-                if (data.toshiba) this.dom.fieldToshiba.value = data.toshiba;
+                // Reset fields first to ensure clean slate if keys missing
+                this.dom.fieldClass.value = data.class || '';
+                this.dom.fieldSubject.value = data.subject || '';
+                this.dom.fieldTeacher.value = data.teacher || '';
+                this.dom.fieldOriginals.value = data.originals || '';
+                this.dom.fieldCopies.value = data.copies || '';
+                this.dom.fieldTotal.value = data.total || '';
+                this.dom.fieldRicoh.value = data.ricoh || '';
+                this.dom.fieldToshiba.value = data.toshiba || '';
                 
                 // Recalculate total just in case
                 this.calcTotal();
@@ -413,13 +486,22 @@
                 }
             },
 
-            clearSelection() {
+            toggleFields(disabled) {
+                const inputs = this.dom.reviewSection.querySelectorAll('input');
+                inputs.forEach(input => input.disabled = disabled);
+            },
+
+            returnToUpload() {
                 this.dom.uploadZone.classList.remove('hidden');
                 this.dom.reviewSection.classList.add('hidden');
                 this.dom.fileInput.value = '';
+                this.resetForm();
+                this.totalInBatch = 0;
+                this.processedInBatch = 0;
+            },
+
+            resetForm() {
                 this.dom.ocrRaw.value = '';
-                
-                // Reset inputs
                 this.dom.fieldClass.value = '';
                 this.dom.fieldSubject.value = '';
                 this.dom.fieldTeacher.value = '';
@@ -428,8 +510,11 @@
                 this.dom.fieldTotal.value = '';
                 this.dom.fieldRicoh.value = '';
                 this.dom.fieldToshiba.value = '';
-                
-                this.dom.progressBar.style.width = '100%';
+            },
+
+            skipCurrent() {
+                 this.resetForm();
+                 this.processNextInQueue();
             },
 
             addToSheet() {
@@ -453,7 +538,10 @@
 
                 this.data.push(row);
                 this.renderTable();
-                this.clearSelection();
+                
+                // Move to next
+                this.resetForm();
+                this.processNextInQueue();
             },
 
             deleteRow(id) {
